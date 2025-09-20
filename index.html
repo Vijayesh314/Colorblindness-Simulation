@@ -2,38 +2,529 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VR Color Blindness Simulator</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Colorblind Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .video-container {
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            aspect-ratio: 4/3;
+        }
+
+        video, canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+
+        .controls {
+            grid-column: 1 / -1;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: rgba(255,255,255,0.9);
+            color: #667eea;
+            border-color: white;
+        }
+
+        .severity-slider {
+            margin-top: 15px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 10px 0;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .info-panel h4 {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .info-panel p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            background: rgba(255,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            body {
+                padding: 10px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <!-- Startup screen that requires user interaction -->
-    <div id="startupScreen">
-        <div id="startupContent">
-            <h1>VR Simulator</h1>
-            <p id="statusMessage">Tap the button to start the camera.</p>
-            <button id="startButton">Start Camera</button>
+    <div class="header">
+        <h1>Real-Time Colorblind Simulator</h1>
+        <p>Experience how different types of colorblindness affect vision</p>
+    </div>
+
+    <div class="container">
+        <div class="video-container">
+            <video id="originalVideo" autoplay muted playsinline></video>
+            <div class="video-label">Normal Vision</div>
+        </div>
+
+        <div class="video-container">
+            <canvas id="simulatedCanvas"></canvas>
+            <div class="video-label" id="simulatedLabel">Normal Vision</div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <h3>🎯 Colorblind Type</h3>
+                <div class="button-group">
+                    <button id="normalBtn" class="active" onclick="setColorblindType('normal')">Normal Vision</button>
+                    <button id="protanopiaBtn" onclick="setColorblindType('protanopia')">Protanopia</button>
+                    <button id="deuteranopiaBtn" onclick="setColorblindType('deuteranopia')">Deuteranopia</button>
+                    <button id="tritanopiaBtn" onclick="setColorblindType('tritanopia')">Tritanopia</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>⚙️ Severity</h3>
+                <div class="severity-slider">
+                    <input type="range" min="0" max="100" value="100" class="slider" id="severitySlider" oninput="updateSeverity(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 5px;">
+                        <span>Mild</span>
+                        <span id="severityValue">100%</span>
+                        <span>Complete</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel" id="infoPanel">
+                <h4>Normal Vision</h4>
+                <p>No color vision deficiency. All colors are perceived normally with full sensitivity to red, green, and blue wavelengths.</p>
+            </div>
         </div>
     </div>
 
-    <!-- Container for the stereoscopic view -->
-    <div id="vrContainer">
-        <canvas id="leftCanvas"></canvas>
-        <div id="divider"></div>
-        <canvas id="rightCanvas"></canvas>
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Starting camera...</p>
     </div>
 
-    <!-- Hidden video element -->
-    <video id="cameraFeed" playsinline autoplay muted></video>
-
-    <!-- Filter controls -->
-    <div id="controls">
-        <button data-filter="normal">Normal</button>
-        <button data-filter="protanopia">Protanopia</button>
-        <button data-filter="deuteranopia">Deuteranopia</button>
-        <button data-filter="tritanopia">Tritanopia</button>
-    </div>
-
-    <script src="main.js"></script>
+    <script>
+        class ColorblindSimulator {
+            constructor() {
+                this.video = document.getElementById('originalVideo');
+                this.canvas = document.getElementById('simulatedCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.currentType = 'normal';
+                this.severity = 1.0;
+                
+                // LMS transformation matrices (same as your Python implementation)
+                this.rgbToLms = [
+                    [0.31399022, 0.63951294, 0.04649755],
+                    [0.15537241, 0.75789446, 0.08670142],
+                    [0.01775239, 0.10944209, 0.87256922]
+                ];
+                
+                this.lmsToRgb = [
+                    [5.47221206, -4.6419601, 0.16963708],
+                    [-1.1252419, 2.29317094, -0.1678952],
+                    [0.02980165, -0.19318073, 1.16364789]
+                ];
+                
+                // Colorblind simulation matrices
+                this.protanopia = [
+                    [0.0, 1.05118294, -0.05116099],
+                    [0.0, 1.0, 0.0],
+                    [0.0, 0.0, 1.0]
+                ];
+                
+                this.deuteranopia = [
+                    [1.0, 0.0, 0.0],
+                    [0.9513092, 0.0, 0.04866992],
+                    [0.0, 0.0, 1.0]
+                ];
+                
+                this.tritanopia = [
+                    [1.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [-0.86744736, 1.86727089, 0.0]
+                ];
+                
+                this.init();
+            }
+            
+            async init() {
+                try {
+                    document.getElementById('loading').style.display = 'block';
+                    
+                    // Request camera access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'environment' // Use back camera on mobile
+                        }
+                    });
+                    
+                    this.video.srcObject = stream;
+                    
+                    // Wait for video to load
+                    await new Promise((resolve) => {
+                        this.video.onloadedmetadata = () => {
+                            this.canvas.width = this.video.videoWidth;
+                            this.canvas.height = this.video.videoHeight;
+                            resolve();
+                        };
+                    });
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    this.startSimulation();
+                    
+                } catch (error) {
+                    document.getElementById('loading').style.display = 'none';
+                    this.showError('Camera access denied or not available. Please allow camera access and refresh the page.');
+                    console.error('Camera error:', error);
+                }
+            }
+            
+            startSimulation() {
+                const animate = () => {
+                    if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
+                        this.processFrame();
+                    }
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+            
+            processFrame() {
+                // Draw original video to canvas
+                this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+                
+                if (this.currentType === 'normal') {
+                    return; // No processing needed for normal vision
+                }
+                
+                // Get image data
+                const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                const data = imageData.data;
+                
+                // Process pixels
+                for (let i = 0; i < data.length; i += 4) {
+                    const rgb = [data[i] / 255, data[i + 1] / 255, data[i + 2] / 255];
+                    const simulatedRgb = this.simulateColorblindness(rgb, this.currentType);
+                    
+                    // Blend based on severity
+                    data[i] = Math.round(255 * (rgb[0] * (1 - this.severity) + simulatedRgb[0] * this.severity));
+                    data[i + 1] = Math.round(255 * (rgb[1] * (1 - this.severity) + simulatedRgb[1] * this.severity));
+                    data[i + 2] = Math.round(255 * (rgb[2] * (1 - this.severity) + simulatedRgb[2] * this.severity));
+                }
+                
+                // Put processed data back to canvas
+                this.ctx.putImageData(imageData, 0, 0);
+            }
+            
+            simulateColorblindness(rgb, type) {
+                // Convert RGB to LMS
+                const lms = this.matrixVectorMultiply(this.rgbToLms, rgb);
+                
+                // Apply colorblind transformation
+                let simMatrix;
+                switch (type) {
+                    case 'protanopia':
+                        simMatrix = this.protanopia;
+                        break;
+                    case 'deuteranopia':
+                        simMatrix = this.deuteranopia;
+                        break;
+                    case 'tritanopia':
+                        simMatrix = this.tritanopia;
+                        break;
+                    default:
+                        return rgb;
+                }
+                
+                const lmsSimulated = this.matrixVectorMultiply(simMatrix, lms);
+                
+                // Convert back to RGB
+                const rgbSimulated = this.matrixVectorMultiply(this.lmsToRgb, lmsSimulated);
+                
+                // Clamp values
+                return [
+                    Math.max(0, Math.min(1, rgbSimulated[0])),
+                    Math.max(0, Math.min(1, rgbSimulated[1])),
+                    Math.max(0, Math.min(1, rgbSimulated[2]))
+                ];
+            }
+            
+            matrixVectorMultiply(matrix, vector) {
+                return [
+                    matrix[0][0] * vector[0] + matrix[0][1] * vector[1] + matrix[0][2] * vector[2],
+                    matrix[1][0] * vector[0] + matrix[1][1] * vector[1] + matrix[1][2] * vector[2],
+                    matrix[2][0] * vector[0] + matrix[2][1] * vector[1] + matrix[2][2] * vector[2]
+                ];
+            }
+            
+            setType(type) {
+                this.currentType = type;
+                this.updateUI();
+            }
+            
+            setSeverity(severity) {
+                this.severity = severity / 100;
+            }
+            
+            updateUI() {
+                // Update button states
+                document.querySelectorAll('.button-group button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(this.currentType + 'Btn').classList.add('active');
+                
+                // Update label
+                const labels = {
+                    'normal': 'Normal Vision',
+                    'protanopia': 'Protanopia (No Red)',
+                    'deuteranopia': 'Deuteranopia (No Green)', 
+                    'tritanopia': 'Tritanopia (No Blue)'
+                };
+                
+                document.getElementById('simulatedLabel').textContent = labels[this.currentType];
+                
+                // Update info panel
+                const infos = {
+                    'normal': {
+                        title: 'Normal Vision',
+                        text: 'No color vision deficiency. All colors are perceived normally with full sensitivity to red, green, and blue wavelengths.'
+                    },
+                    'protanopia': {
+                        title: 'Protanopia',
+                        text: 'Missing L-cones (long wavelength). Cannot distinguish between red and green. Affects about 1% of men. Red appears dark, and red-green combinations look yellow or brown.'
+                    },
+                    'deuteranopia': {
+                        title: 'Deuteranopia', 
+                        text: 'Missing M-cones (medium wavelength). Cannot distinguish between red and green. Most common severe form, affecting about 1.5% of men. Green appears beige or gray.'
+                    },
+                    'tritanopia': {
+                        title: 'Tritanopia',
+                        text: 'Missing S-cones (short wavelength). Cannot distinguish between blue and yellow. Very rare, affecting less than 0.01% of people. Blue appears green, yellow appears pink.'
+                    }
+                };
+                
+                const info = infos[this.currentType];
+                document.querySelector('#infoPanel h4').textContent = info.title;
+                document.querySelector('#infoPanel p').textContent = info.text;
+            }
+            
+            showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // Global functions for UI
+        let simulator;
+        
+        function setColorblindType(type) {
+            if (simulator) {
+                simulator.setType(type);
+            }
+        }
+        
+        function updateSeverity(value) {
+            document.getElementById('severityValue').textContent = value + '%';
+            if (simulator) {
+                simulator.setSeverity(value);
+            }
+        }
+        
+        // Initialize when page loads
+        window.onload = () => {
+            simulator = new ColorblindSimulator();
+        };
+        
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Pause processing when tab is not visible to save resources
+                if (simulator && simulator.video.srcObject) {
+                    simulator.video.srcObject.getTracks().forEach(track => track.enabled = false);
+                }
+            } else {
+                // Resume when tab becomes visible
+                if (simulator && simulator.video.srcObject) {
+                    simulator.video.srcObject.getTracks().forEach(track => track.enabled = true);
+                }
+            }
+        });
+    </script>
 </body>
 </html>
