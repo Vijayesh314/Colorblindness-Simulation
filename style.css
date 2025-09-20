@@ -1,0 +1,86 @@
+/* General body styles */
+body {
+    font-family: sans-serif;
+    background-color: #000;
+    color: white;
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Startup overlay screen */
+#startupScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #111;
+    z-index: 200; /* Ensure it's on top of everything */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#startupContent {
+    padding: 20px;
+}
+
+#startButton {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+}
+
+/* Container for the two canvas views */
+#vrContainer {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+#leftCanvas, #rightCanvas {
+    width: 50%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#divider {
+    width: 2px;
+    height: 100%;
+    background-color: #222;
+}
+
+#cameraFeed {
+    display: none;
+}
+
+#controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 10px;
+    z-index: 100;
+}
+/* Other button styles can remain the same */
+button {
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+}

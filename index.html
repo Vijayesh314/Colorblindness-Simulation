@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VR Color Blindness Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Startup screen that requires user interaction -->
+    <div id="startupScreen">
+        <div id="startupContent">
+            <h1>VR Simulator</h1>
+            <p id="statusMessage">Tap the button to start the camera.</p>
+            <button id="startButton">Start Camera</button>
+        </div>
+    </div>
+
+    <!-- Container for the stereoscopic view -->
+    <div id="vrContainer">
+        <canvas id="leftCanvas"></canvas>
+        <div id="divider"></div>
+        <canvas id="rightCanvas"></canvas>
+    </div>
+
+    <!-- Hidden video element -->
+    <video id="cameraFeed" playsinline autoplay muted></video>
+
+    <!-- Filter controls -->
+    <div id="controls">
+        <button data-filter="normal">Normal</button>
+        <button data-filter="protanopia">Protanopia</button>
+        <button data-filter="deuteranopia">Deuteranopia</button>
+        <button data-filter="tritanopia">Tritanopia</button>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
